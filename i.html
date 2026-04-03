@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finance Tracker</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 500px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      input,
+      select,
+      button {
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+
+      button {
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+
+      #balance {
+        font-size: 20px;
+        font-weight: bold;
+        display: block;
+        margin: 20px 0;
+      }
+
+      ul {
+        padding: 0;
+        list-style: none;
+      }
+
+      li {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+      }
+
+      li.income {
+        color: green;
+      }
+
+      li.expense {
+        color: red;
+      }
+
+      li button {
+        padding: 0 20px;
+        background-color: #f44336;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Finance Tracker</h1>
+    <form id="transactionForm">
+      <input type="number" id="amount" placeholder="Enter Amount" />
+      <label>
+        <input type="radio" name="type" value="income" checked /> Income
+      </label>
+      <label>
+        <input type="radio" name="type" value="expense" /> Expense
+      </label>
+      <select id="category" title="Category">
+        <option value="salary">Salary</option>
+        <option value="food">Food</option>
+        <option value="shopping">Shopping</option>
+        <option value="entertainment">Entertainment</option>
+        <option value="other">Other</option>
+      </select>
+      <span id="balance">Balance: ₹0</span>
+      <button type="submit">Add Transaction</button>
+    </form>
+
+    <h2>Transaction History</h2>
+    <ul id="transactionList"></ul>
+
+    <script>
+      let transactions = [];
+      if (!localStorage.getItem("transactions")) {
+        localStorage.setItem("transactions", JSON.stringify([]));
+      }
+
+      let balance = 0;
+      const balanceSpan = document.getElementById("balance");
+
+      const form = document.getElementById("transactionForm");
+      const list = document.getElementById("transactionList");
+      const storedTransactions = localStorage.getItem("transactions");
+      transactions = JSON.parse(storedTransactions);
+
+      for (let i = 0; i < transactions.length; i++) {
+        const transaction = transactions[i];
+        const listItem = document.createElement("li");
+        // your existing balance and listItem code here
+        if (transaction.type == "income") {
+          balance = balance + transaction.amount;
+        } else {
+          balance = balance - transaction.amount;
+        }
+        balanceSpan.textContent = `Balance: ₹${balance}`;
+        listItem.textContent = `${transaction.type} - ${transaction.category}: ₹${transaction.amount}`;
+        list.appendChild(listItem);
+        listItem.classList.add(transaction.type);
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Delete";
+        listItem.appendChild(deleteButton);
+
+        deleteButton.addEventListener("click", function () {
+          transactions.splice(i, 1);
+          localStorage.setItem("transactions", JSON.stringify(transactions));
+          list.removeChild(listItem);
+          // recalculate balance here
+          balance = 0;
+          for (let j = 0; j < transactions.length; j++) {
+            if (transactions[j].type == "income") {
+              balance = balance + transactions[j].amount;
+            } else {
+              balance = balance - transactions[j].amount;
+            }
+          }
+          balanceSpan.textContent = `Balance: ₹${balance}`;
+        });
+      }
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const amount = Number(document.getElementById("amount").value);
+        const category = document.getElementById("category").value;
+        const type = document.querySelector('input[name="type"]:checked').value;
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Delete";
+        deleteButton.addEventListener("click", function () {
+          const index = transactions.indexOf(
+            transactions.find(
+              (t) =>
+                t.amount === amount &&
+                t.type === type &&
+                t.category === category,
+            ),
+          );
+          transactions.splice(index, 1);
+          localStorage.setItem("transactions", JSON.stringify(transactions));
+          list.removeChild(listItem);
+          balance = 0;
+          for (let j = 0; j < transactions.length; j++) {
+            if (transactions[j].type == "income") {
+              balance = balance + transactions[j].amount;
+            } else {
+              balance = balance - transactions[j].amount;
+            }
+          }
+          balanceSpan.textContent = `Balance: ₹${balance}`;
+        });
+        if (type == "income") {
+          balance = balance + amount;
+        } else {
+          balance = balance - amount;
+        }
+        balanceSpan.textContent = `Balance: ₹${balance}`;
+        transactions.push({ amount, category, type });
+        localStorage.setItem("transactions", JSON.stringify(transactions));
+
+        const listItem = document.createElement("li");
+        listItem.textContent = `${type} - ${category}: ₹${amount}`;
+        list.appendChild(listItem);
+        listItem.appendChild(deleteButton);
+        listItem.classList.add(type);
+      });
+    </script>
+  </body>
+</html>
